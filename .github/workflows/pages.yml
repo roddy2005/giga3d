@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Pages 배포에 필요한 권한들
 permissions:
   contents: read
   pages: write
@@ -19,13 +20,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20       # ← cache 설정 제거!
-      - run: npm i               # ← lockfile 없어도 동작
-      - run: npm run build
-      - run: cp dist/index.html dist/404.html || true
-      - uses: actions/upload-pages-artifact@v3
+          node-version: 20        # cache 사용 안 함 (lockfile 없어도 OK)
+
+      - name: Install deps
+        run: npm i               # lockfile 없어도 설치됨
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages        # ← Pages용 메타데이터/권한 설정
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact    # dist를 Pages 아티팩트로 업로드
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
@@ -36,5 +46,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
